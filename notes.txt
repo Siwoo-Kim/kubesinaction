@@ -1,0 +1,46 @@
+Container
+- Kubernetes requires app to be packaged into container image.
+- Docker supports having multiple versions under same image.
+- Docker file is instructions that Docker will perform when building the image.
+- Images is composed of multiple layered.
+
+    docker run busybox echo "Hello world"
+    - run the image
+
+GKE
+- Use gcloud tool to configure default settings.
+- https://cloud.google.com/kubernetes-engine/docs/quickstart
+
+Run app on kubernetes
+- prepare JSON or YAML manifest, containing a description of all the resources you want to deploy.
+
+Components 
+    Nodes
+    - Each node runs "Docker", "Kubelet" and "kube-proxy".
+    Master Node
+    - controls while kube system (control plane).
+    
+    Kubectl
+    - client command tool which issues REST requests to "Kube API Server"
+    
+    
+Flow of deploying resources.
+    1. developer create & push image to "Docker Hub"
+    2. developer define & create resource using "kubectl"
+    3. kubectl issues REST call to "Kube API Server"
+    4. Resource is schedule to a worker node by "Scheduler"
+    5. "Kubelet" on the node is notified.
+    6. The Node pull the image and run the container from "Docker Hub"
+  
+Pods
+- basic building block in Kube.
+- group of tightly related containers that will runs on the same node.
+- "logical machine" with its own IP, hostname, processes.
+- pod can be replicated and spread out across different worker nodes.
+
+ReplicationController
+- used to replicate pods. (high-availability)
+
+Service
+- distribute the requests across multiple pods.
+- a single constant IP and port for pods (pod is ephemeral and pod IP addresses are ever-changing)

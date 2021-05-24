@@ -1,0 +1,52 @@
+
+
+Docker
+    docker run --name [containerName] [command] -p [hostPort]:[containerPort] [-d] [image:tag]
+        - run the image 
+    docker build -t [image:tag] .
+        - build the docker image using Dockerfile 
+    docker image ls [-a] [-q]
+        - show [all] image [quietly]
+    docker ps
+        - list all running containers.
+    * docker inspect [containerName]
+        - metadata about the container
+    * docker exec -it [containerName] [command] [bash|sh]
+        - open console for running container.
+    docker tag [imgName] [newImgName]
+        - tagging with new name
+
+GCLOUD
+    gcloud container clusters create kubia --num-nodes 3 --machine-type f1-micro
+        - create a kube cluster with 3 nodes.
+    gcloud config set project [projectName]
+        - set default project
+    gcloud compute ssh [nodeName]
+        - ssh to the node
+
+Shortcut
+    edit ~/.bashrc
+        => alias k=kubectl
+    
+    source <(kubectl completion bash | sed s/kubectl/k/g)
+        => bash completion
+
+    pods=po
+    services=svc
+    replicationcontroller=rc
+    replicaset=rs
+
+Kubes
+    kube cluster-info
+        - show cluster info    
+    kube get [resource] [name] -o [output]
+        - get resource
+    kube describe [resource] [name]
+        - get resource's detail
+    kube run [name] [--image=[imgName]] --port=[portNum] --generator=[apiVerison]
+        - deploy rs with cmd
+    * kube exec -it [containerName] [bash|sh]
+        - run shell on running container
+    kube expose rc [replicaName] --type=LoadBalancer --name [serviceName]
+        - deploy LoadBalancer Service for given pod
+    kube scale rc [containerName] --replicas=[replicas]
