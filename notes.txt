@@ -31,13 +31,94 @@ Flow of deploying resources.
     4. Resource is schedule to a worker node by "Scheduler"
     5. "Kubelet" on the node is notified.
     6. The Node pull the image and run the container from "Docker Hub"
-  
+
+Resource components
+- "metadata" includes the name, labels and annotations about the resource.
+- "spec" contains the actual description. (eg. contents, env, volumes or other config data)
+- "status" contains the current info about the running resource.
+
+Reference
+- "kube explain [resourceType]" show you reference documentation for the given resource.
+- https://kubernetes.io/docs/reference/kubernetes-api/
+
+Namespace
+- organize resources into groups.
+- to isolate groups from each other.
+
+    Sample YAML
+    
+    apiVersion: v1
+    kind: Namespace
+    metadata:
+      name: [nsName]
+
 Pods
 - basic building block in Kube.
-- group of tightly related containers that will runs on the same node.
+- co-located group of containers that will runs on the same node.
 - "logical machine" with its own IP, hostname, processes.
-- pod can be replicated and spread out across different worker nodes.
+- pods spread out across different worker nodes.
+- A pod never spans two nodes.
 
+    Splitting into multiple pods.
+    - Scaling for each demand.
+    - Distribution for tacking advantage of the cluster's resource
+    
+    Deciding when to use multiple containers in a pod.
+    - can they on different hosts?
+    - Are then independent components?
+    - Must test be scaled together or individually?
+    
+    Creating pods from yaml.
+    - posting YAML manifest to the "Kube API Server"
+    https://kubernetes.io/docs/reference/
+    
+    Container logs
+    - kube logs [podName] -c [ctName]
+    - automatically rotated daily and every time the log file reaches 10MB.
+    
+    Port Forwarding
+    - no dedicated server, but can connecting to a pod for "debugging".
+    - forwarding "local port" to "a port" in the pod.
+    - "kubectl port-forward"
+    
+    Labels (metadata.labels)
+        - Organizing Pods
+        - key-value pair attached to a resource.
+        - selecting resources using label selectors.
+        - eg. "app" - kind of service, "rel" - release version
+        - Label selectors allow you to select a subset of pods. "kube get -l" 
+            - contains a label with a certain key
+            - contains a label with a certain key and value
+            - contains a label with a certain key, but with value not equal to the one you specify
+        
+        NodeSelector (spec.nodeSelector)
+        - tells kube to deploy this pod only to nodes containing same label.
+    
+    Annotations (metadata.annotations)
+    - hold much larger information than labels.
+    
+    Sample YAML
+    apiVersion: v1
+    kind: Pod
+    metadata:
+      name: [podName]
+      labels:
+        [key]: [value]
+        ..
+    spec:
+      nodeselector:
+        [key]: [value]
+      containers:
+        - name: [ctName]
+          image: [imgName]
+          env:
+            - name: [envName]
+              value: [envVal]
+          ports:
+            - name
+              containerPort: [ctPort]
+              protocol: TCP
+    
 ReplicationController
 - used to replicate pods. (high-availability)
 

@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: kubia-qa
+  labels:
+    app: kubia
+    rel: beta
+    env: qa
+    dep_method: manaul
+spec:
+  containers:
+    - name: kubia
+      image: sm123tt/kubia
+      env:
+        - name: TOKEN_PATH
+          value: /var/run/secrets/kubernetes.io/serviceaccount/token
+      ports:
+        - name: http
+          containerPort: 8080
+          protocol: TCP
