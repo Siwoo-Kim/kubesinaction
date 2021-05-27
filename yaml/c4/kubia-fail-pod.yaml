@@ -1,0 +1,27 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: kubia
+  labels:
+    app: kubia
+    learn: liveness
+  namespace: dev
+spec:
+  containers:
+    - name: kubia
+      image: sm123tt/kubia:fail
+      imagePullPolicy: Always
+      env:
+        - name: TOKEN_PATH
+          value: /var/run/secrets/kubernetes.io/serviceaccount/token
+      ports:
+        - containerPort: 8080
+          protocol: TCP
+      livenessProbe:
+        failureThreshold: 1
+        initialDelaySeconds: 15
+        timeoutSeconds: 5
+        periodSeconds: 15
+        httpGet:
+          port: 8080
+          path: /

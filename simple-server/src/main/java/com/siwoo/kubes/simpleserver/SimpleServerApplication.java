@@ -27,8 +27,14 @@ public class SimpleServerApplication {
 		@Value("${KUBE_TOKEN_PATH}")
 		private String TOKEN_PATH;
 		
+		private int cnt;
+		
 		@GetMapping("/")
 		public ResponseEntity<?> index(HttpServletRequest req) {
+			if (cnt++ >= 5) {
+				return ResponseEntity.status(500)
+						.body(ImmutableMap.of("error", "Something happens"));
+			}
 			log.info(String.format("Received request from %s", req.getRemoteAddr()));
 			String os = System.getProperty("os.name");
 			return ResponseEntity.ok(ImmutableMap.of("message", 

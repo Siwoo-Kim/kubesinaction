@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: ReplicaSet
+metadata:
+  name: kubia
+  namespace: dev
+  labels:
+    app: kubia
+    purpose: liveness
+spec:
+  replicas: 3
+  selector:
+    matchExpressions:
+      - key: app
+        operator: In
+        values:
+          - kubia
+          - kubia-dev
+  template:
+    metadata:
+      name: kubia
+      namespace: dev
+      labels:
+        app: kubia
+        purpose: liveness
+    spec:
+      containers:
+        - name: main
+          image: sm123tt/kubia
+          imagePullPolicy: Always
+          env:
+            - name: TOKEN_PATH
+              value: /var/run/secrets/kubernetes.io/serviceaccount/token
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+          livenessProbe:
+            initialDelaySeconds: 10
+            periodSeconds: 15
+            timeoutSeconds: 5
+            failureThreshold: 3
+            httpGet:
+              port: 8080
+              path: /
+          

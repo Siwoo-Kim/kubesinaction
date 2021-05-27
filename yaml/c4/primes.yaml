@@ -1,0 +1,16 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: primes
+  namespace: dev
+spec:
+  completions: 5
+  template:
+    metadata:
+      labels:
+        app: primes
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: main
+          image: sm123tt/primes

@@ -6,7 +6,11 @@
 
     <groupId>org.example</groupId>
     <artifactId>kubesinaction</artifactId>
+    <packaging>pom</packaging>
     <version>1.0-SNAPSHOT</version>
+    <modules>
+        <module>prime-printer</module>
+    </modules>
 
 
 </project>

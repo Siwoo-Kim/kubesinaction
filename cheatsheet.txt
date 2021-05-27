@@ -26,14 +26,19 @@ GCLOUD
         - set default project
     gcloud compute ssh [nodeName]
         - ssh to the node
-    
+    gcloud compute instances reset [nodeName]
+        - bring the node back.
+        
 Shortcut
-    edit ~/.bashrc
+    * edit ~/.bashrc
         => alias k=kubectl
     
-    source <(kubectl completion bash | sed s/kubectl/k/g)
+    * source <(kubectl completion bash | sed s/kubectl/k/g)
         => bash completion
 
+    * export KUBE_EDITOR="/usr/bin/nano"
+        => changing the default editor.
+        
     pods=po
     services=svc
     replicationcontroller=rc
@@ -71,13 +76,15 @@ Kubes
     kube expose [resourceType] [resourceName] --type=LoadBalancer --name [serviceName]
         - deploy LoadBalancer Service for given pod
     kube scale rc [containerName] --replicas=[replicas]
-    
+        - horizontally scaling rc
     kube create -f [yamlFile]
         - creating resource from a YAML file.
-    kube logs [podName] -c [ctName]
+    kube logs [podName] -c [ctName] [--previous]
         - show last rotation logs
     kube port-forward [podName] [localPort]:[podPort]
         - forwarding local p
+    kube edit [resourceType] [resourceName]
+        - open the resource's yaml in the text editor to edit the definition.
     kube label [resourceType] [resourceName] [key=value] [--overwrite]
         - add or changing a label.
     kube delete [resourceType] -l [label] [--all]

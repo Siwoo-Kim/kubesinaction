@@ -19,7 +19,6 @@ Components
     - Each node runs "Docker", "Kubelet" and "kube-proxy".
     Master Node
     - controls while kube system (control plane).
-    
     Kubectl
     - client command tool which issues REST requests to "Kube API Server"
     
@@ -44,13 +43,11 @@ Reference
 Namespace
 - organize resources into groups.
 - to isolate groups from each other.
-
-    Sample YAML
     
-    apiVersion: v1
-    kind: Namespace
-    metadata:
-      name: [nsName]
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: [nsName]
 
 Pods
 - basic building block in Kube.
@@ -97,7 +94,6 @@ Pods
     Annotations (metadata.annotations)
     - hold much larger information than labels.
     
-    Sample YAML
     apiVersion: v1
     kind: Pod
     metadata:
@@ -118,10 +114,120 @@ Pods
             - name
               containerPort: [ctPort]
               protocol: TCP
+              
+    Liveness probes
+    - check container's health through liveness probes.
+    - specify "liveness probe" in the "pod's specification".
+    - Kube will periodically execute and if a "probe fail", it will "restart" the container.
+        
+        Components:
+        HTTP GET probe
+        - performs an HTTP GET request on the container's IP address, a port and path you specify.
+        - "delay", "timeout", "period"
+        - already remember to set an initial delay to account for app's startup time
+        - should always define a liveness probe.
+        
+        TCP Socket probe
+        - open a TCP connection to the specified port of the container. (check whether connection is established or not)
+        
+        Exec probe
+        - executes an arbitrary command in the container.
+        
+    apiVersion: v1
+    kind: Pod
+    metadata:
+        ...
+    spec:
+      containers:
+        - name: kubia
+        ...
+          livenessProbe:
+            failureThreshold: 1
+            initialDelaySeconds: 15
+            timeoutSeconds: 5
+            periodSeconds: 15
+            httpGet:
+              port: 8080
+              path: /
+                  
+    Liveness:       http-get http://:8080/ delay=0s timeout=1s period=10s #success=1 #failure=1
     
+Job
+- for a single completable task.
+- in the event of a failure of the process, the Job can be configured to either restart the container or not.
+
+apiVersion: batch/v1
+kind: Job
+metadata:
+    ...
+spec:
+  template:
+    metadata:
+      labels:
+        [key]: [value]
+    spec:
+      completions: [numOfTasks]
+      parallelism: [numberOfThreads]
+      restartPolicy: OnFailure
+      containers:
+        ...
+
 ReplicationController
 - used to replicate pods. (high-availability)
 
 Service
 - distribute the requests across multiple pods.
 - a single constant IP and port for pods (pod is ephemeral and pod IP addresses are ever-changing)
+
+ReplicationControllers
+- a resource that ensures its pods are always kept running.
+- create and manage multiple copies (replicas) of a pod.
+- If pod disappears, rs notices the missing pod and creates a replacement pod. 
+- makes sure the actual number of pods of a "a certain label" always matches the desired number (replicas)
+- "pod template" can be modified at any time and will have effect on newly created pod.
+- horizontally scale up by "kubectl scale rc [resourceName] --replicas=[replicas]"
+- when you delete a rc through kubectl delete, the pods are also deleted. 
+    Components:
+    A Label Selector
+    - determines what pods are in rc's scope
+    A Replica Count
+    - desired number of pods
+    A Pod Template
+    - is used when rc creates new pod replicas.
+
+    Changing label for a pod.
+    - if a pod is malfunctioning, take the pod out of the rc scope (by changing the label - rc will bring new one), 
+    and then debug with the pod.
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  ...
+  labels:
+    [key]: [value]
+spec:
+  replicas: [replicas]
+  selector: #pod selector determining what pods the rc cares
+    [key]: [value]
+  template: #the pod template for creating new pods.
+    metadata:
+      ...
+      labels:
+        [key]: value
+    spec:
+      containers:
+      ...
+
+    ReplicaSet
+    - new generation of rc.
+    - has more expressive pod selectors.
+    
+    ReplicaSet Selector
+        matchLabels
+        - listing labels the pods need to have
+        matchExpressions
+        - match labels by expression "In", "NotIn", "Exists", "DoesNotExist"
+        
+    DemonSets
+    - want a pod to run on each and every node in the cluster
+    - useful for infrastructure-related pods that perform system-level operations.
+    eg. log collector or resource monitor on every node or kube-proxy process.
