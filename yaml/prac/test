@@ -1,0 +1,128 @@
+kube label [pod] [key]=[value]
+
+kube get po -l app=kubia,'app in (kubia,test),app!=prod
+
+apiVersion: v1
+kind: Namespace
+metadata
+	name: dev
+
+kubeclt explain - show api of resource
+
+liveness probes
+
+apiVersion: v1
+kind Pod
+metadata:
+	name: kubia
+	labels:
+		app=kubia
+	namespace: dev
+spec:
+	containers:
+		- name: main
+		image: sm123tt/kubia
+		ports:
+		- containerPort: 8080
+		  protocol: TCP
+		livenessProbe:
+			initialDelaySeconds: 15
+			httpGet:
+				path: /
+				port: 8080 
+
+apiVersion: apps/v1
+kind: ReplicaSet
+metadata:
+	name: kubia
+	labels:
+	- app: kubia
+spec:
+	replicas: 3
+	selector:
+		matchExpressions:
+			- key: app
+			  operator: In
+			  values:
+			  - kubia
+			  - webserver
+	template:
+		metadata:
+			name: kubia
+			labels:
+				app: kubia
+		spec:
+			containers:
+			- name: main
+			  image: sm123tt/kubia
+			  ports:
+			  - containerPort: 8080
+			    protocol: TCP 
+
+gcloud compute ssh [node]
+
+kube label po kubia [key]=[value] --overwrite
+
+kube edit rc [rcName]
+
+kube scale rc [rcName] --replicas=[numOfReplicas]
+
+kube delete rc [rcName] --cascade=false
+
+apiVersion: v1
+kind: Service
+metadata:
+	name: kubia
+	labels:
+	- app: kubia
+spec:
+	sessionAffinity: ClientIP
+	# all requests from same client goes to the same pod. 
+	ports:
+	- name: http
+	  port: 80
+	  targetPort: 8080
+	- name: https
+	  port: 443
+	  targetPort: 8443
+	selector:
+		app: kubia
+
+clusterIP
+eternalIP
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

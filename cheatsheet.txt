@@ -28,6 +28,8 @@ GCLOUD
         - ssh to the node
     gcloud compute instances reset [nodeName]
         - bring the node back.
+    gcloud compute firewall-rules create kubia-svc-rule --allow=tcp:30123
+        - open firewall on the node
         
 Shortcut
     * edit ~/.bashrc
@@ -49,6 +51,10 @@ Kubes
     kubectl config set-context $(kubectl config current-context) --namespace [ns]
         - change the current namespace.
         
+    kube get nodes -o jsonpath='{.items[*].status.addresses[?(@.type=="ExternalIP")].address}'
+        - get the node's external ip
+    kube get po --all-namespaces
+        - get all pods in all na
     kube config
         - change the context
     kube cluster-info

@@ -1,0 +1,127 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: kubia
+  namespace: dev
+  labels:
+    app: kubia
+spec:
+  sessionAffinity: ClientIP
+  selector:
+    app: kubia
+  ports:
+    - port: 80
+      name: http
+      targetPort: http
+    - port: 443
+      name: https
+      targetPort: https 
+---
+apiVersion: apps/v1
+kind: ReplicaSet
+metadata:
+  namespace: dev
+  name: kubia
+  labels:
+    app: kubia
+spec:
+  selector:
+    matchExpressions:
+      - key: app
+        operator: In
+        values:
+          - kubia
+  replicas: 3
+  template:
+      metadata:
+        labels:
+          app: kubia
+      spec:
+        containers:
+          - name: main
+            image: sm123tt/kubia
+            imagePullPolicy: Always
+            livenessProbe:
+              initialDelaySeconds: 30
+              httpGet:
+                port: 8080
+                path: /
+            env:
+              - name: TOKEN_PATH
+                value: /var/run/secrets/kubernetes.io/serviceaccount/token
+            ports:
+              - containerPort: 8080
+                name: http
+                protocol: TCP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: dev
+  name: kubia-client
+  labels:
+    app: kubia-client
+spec:
+  type: NodePort
+  selector:
+    app: kubia-client
+  ports:
+    - name: http
+      port: 80
+      targetPort: http
+      nodePort: 30123
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  namespace: dev
+  name: ingress
+spec:
+  rules:
+    - host: kubia.siwoo.com
+      http:
+        paths:
+          - path: /front
+            backend:
+              servicePort: 80
+              serviceName: kubia-client
+          - path: /back
+            backend:
+              servicePort: 80
+              serviceName: kubia
+---
+apiVersion: apps/v1
+kind: ReplicaSet
+metadata:
+  name: kubia-client
+  namespace: dev
+  labels:
+    app: kubia-client
+spec:
+  replicas: 3
+  selector:
+    matchExpressions:
+      - key: app
+        operator: In
+        values:
+          - kubia-client
+  template:
+    metadata:
+      name: kubia-client
+      labels:
+        app: kubia-client
+    spec:
+      containers:
+        - name: main
+          image: sm123tt/kubia-client
+          livenessProbe:
+            initialDelaySeconds: 160
+            timeoutSeconds: 10
+            httpGet:
+              port: 8080
+              path: /
+          ports:
+            - containerPort: 8080
+              name: http
+              protocol: TCP

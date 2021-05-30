@@ -231,3 +231,120 @@ spec:
     - want a pod to run on each and every node in the cluster
     - useful for infrastructure-related pods that perform system-level operations.
     eg. log collector or resource monitor on every node or kube-proxy process.
+
+Service
+- respond to HTTP req coming either from pods inside the cluster of from clients outside the cluster.
+- a single, constant point  of entry to a group of pods.
+- each has an constant IP address and port.
+- label selectors define which pods are part of the service.
+
+    Problems
+    - pods are ephemeral
+    - IP is assigned after the pod has been scheduled to a node.
+    - Pods are replicated & distributed.
+   
+   Components
+   - CLUSTER-IP is for access from inside the cluster.
+   - Session Affinity property allow client to be redirected to the same pod everytime.
+   - port refers to "svc port"
+   - targetPort refers to "pod's port"
+   - nodePort refers to "node's port"
+   - Discovering services via ENV or DNS
+   
+   EndPoints
+   - EndPoints represents pods' ips and ports.
+   - It's kube resource. [kube get endpoints [podName]]
+   - Manually created endpoints can be used for external service. (the service can be used like any regual service)
+   
+   apiVersion: v1
+   kind: Service
+   metadata:
+     name: ext-svc  //should be same
+     namespace: dev
+   spec:
+     ports:
+     - port: 80
+   ---
+   apiVersion: v1
+   kind: Endpoints
+   metadata:
+     name: ext-svc  //should be same
+     namespace: dev
+   subsets:
+     - addresses:
+       - ip: 125.209.222.142
+       ports:
+       - port: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+    ...
+spec:
+  selector:
+    [key]: [value]
+  ports:
+    - port: [svcPort]
+      targetPort: [ctPort]
+      
+    Discovering Service
+    - By ENV
+        - when a pod is scheduled, kube inits a set of environment variables pointing to each service at that moment.
+        - [SVC_NAME]_HOST & [SVC_NAME]_PORT
+    - By DNS
+        kube-dns is dns server pod in kube. (kube-system namespace)
+        FQDN: [SVC_NAME].[NAMESPACE].svc.cluster.local
+        
+External Service (exposing service to external)
+- NodePort
+    - open a port on all nodes.
+    - access by:
+    [CLUSTER_IP]:[SVC_PORT]     - inner connection
+    [ith Node's IP]:[NODE_PORT] - external connection
+    - if the node you know fails, your clients can't access the service anymore. so should put load balancer
+    
+- LoadBalancer
+    - makes the service accessible through a dedicated load balancer from cloud.
+    - automatic provision of a load balancer from the cloud provider.
+    
+- Ingress
+    - exposing multiple service through a single IP address. (operates at the HTTP level)
+    - LoadBalancer requires its own LB and own pulbic IP (per service), whereas an Ingress only requires only one LB and public IP.
+    multiple services can be exposed through as single ingress.
+    - the host and path in url determine which service the req is forwarded. (By Controller)
+    - ingress controller is required.
+    
+    ---
+    apiVersion: v1
+    kind: Service
+    metadata:
+      namespace: dev
+      name: kubia-client
+      labels:
+        app: kubia-client
+    spec:
+      type: NodePort
+      selector:
+        app: kubia-client
+      ports:
+        - name: http
+          port: 80
+          targetPort: http
+          nodePort: 30123
+    ---
+    apiVersion: extensions/v1beta1
+    kind: Ingress
+    metadata:
+      namespace: dev
+      name: ingree
+    spec:
+      rules:
+        - host: kubia.siwoo.com
+          http:
+            paths:
+              - path: /
+                backend:
+                  serviceName: kubia-client
+                  servicePort: 80
+    
+    
