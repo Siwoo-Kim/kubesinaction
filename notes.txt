@@ -348,3 +348,154 @@ External Service (exposing service to external)
                   servicePort: 80
     
     
+Volumes
+- preserve pods' directories and hold actual data.
+- share data between containers.
+- a component of pod and defined in the pod's spec.
+- mounted in each container that needs to access it.
+
+Volume types.
+    - emptyDir
+    A simple empty directory used for storing transient data.
+    The lifetime is tied to the pod.
+    - hostPath
+    Used for mounting directories from "node's filesystem"
+    Pods running on the same node and using same hostPath volume see the same files.
+    - nfs
+    An NFS share mounted into the pod.
+    - gcePersistentDisk, awsElasticBlockStore, azureDisk
+    Used for mounting cloud provider-specific storage.
+    configMap, secret, downwardAPI
+    - special types of volumes used to expose kube's resources and cluster info.
+    PVC (persistentVolumeClaim)
+    - dynamically provisioned persistent storage.
+  
+emptyDir  
+    apiVersion: apps/v1
+    kind: ReplicaSet
+    metadata:
+        ...
+    spec:
+      replicas: 3
+      selector:
+        matchExpressions:
+            ...
+      template:
+        metadata:
+            ...
+        spec:
+          containers:
+            - name: ...
+              image: ...
+              volumeMounts:
+              - name: [vlName]
+                mountPath: [mntPath]
+            - name: ...
+              image: ...
+              volumeMounts:
+                - name: [vlName]
+                  mountPath: [mntPath]
+                  readOnly: true
+              ports:
+                ...
+          volumes:
+          - name: [vlName]
+            emptyDir:
+              medium: Memory
+
+GKE Persistent Disk (Cloud Disk)
+- a volume backed by the GCE persistent disk.
+- rescheduled pod will see exact same disk, even if the pod is located in a different node.
+  template:
+    metadata:
+      ...
+    spec:
+      volumes:
+        - name: [vlName]
+          gcePersistentDisk:
+            pdName: [diskNameCreated]
+            fsType: [filesystemType]
+      containers:
+        - name: ...
+          image: ...
+          volumeMounts:
+            - mountPath: [mntPath]
+              name: [vlName]
+          ports:
+            - containerPort: ...
+              protocol: ...
+
+PV & PVC (PersistentVolumes and PersistentVolumeClaims) 
+- Decoupling pods from the underlying storage.
+- PV are provisioned by cluster admins and consumed by pods through PVC.
+- the developer doesn't need to know anything about the actual storage techonology.
+
+PV
+- admin sets up network storage then creates a PV by positing a PV descriptor with the storage info.
+- PV doesn't belong to any namespace.
+PVC
+- user creates a PVC and kube finds a pv of adequate size and access mode and binds the PVC to the PV.
+- then user creates a pod with a volume referencing the PVC
+AccessModes
+- RWO - ReadWriteOnce - Only "a single node" can mount the volume for reading and writing
+- ROX - ReadOnlyMany - "Multiple nodes" can mount the volume for reading
+- RWX - ReadWriteMany - "Multiple nodes" can mount the volume for reading and writing.
+
+ReclaimPolicy
+- after pvc delete, the status of pv will be Released (not Available). because it may contain data, so allow cluster admin a chance to clean it up.
+- change the reclaim policy to Retain to prevent losing data.
+
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: [pvName]
+spec:
+  capacity:
+    storage: [pvSize]
+  accessModes:
+    - [allowedAccessMode]
+    - [allowedAccessMode]
+  persistentVolumeReclaimPolicy: [Retain|Delete|Recycle]
+  [cloudDisk]:
+    pdName: [diskName]
+    fsType: [fsType]
+    
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: [pvcName]
+spec:
+  resources:
+    requests:
+      storage: [pvcSize]
+  accessModes:
+    - [accessMode]
+  storageClassName: ""
+  
+StorageClass (Dynamic provisioning of PV)
+- without cluster admin, kue perform perform this job automatically through dynamic provisioning of pv.
+- Instead of admin creating a bunch of pv, they define one or more StorageClass and let the system create a PV each time one is requested through PVC.
+- "provisioner" should be specified for provisioning the PV.
+
+
+---
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: [stcName]
+provisioner: [cloudProvisioner]
+parameters:
+    ...[cloudSpecificParameters]
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mongodb-pvc
+  namespace: dev
+spec:
+  resources:
+    requests:
+      storage: [pvcSize]
+  accessModes:
+    - [accessMode]
+  storageClassName: [stcName]

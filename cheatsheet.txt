@@ -22,6 +22,8 @@ GCLOUD
     
     gcloud container clusters create kubia --num-nodes 3 --machine-type f1-micro
         - create a kube cluster with 3 nodes.
+    gcloud container clusters list
+        - check kube clusters.
     gcloud config set project [projectName]
         - set default project
     gcloud compute ssh [nodeName]
@@ -30,6 +32,8 @@ GCLOUD
         - bring the node back.
     gcloud compute firewall-rules create kubia-svc-rule --allow=tcp:30123
         - open firewall on the node
+    gcloud compute disks create --size=10GiB --zone=us-central1-c mongodb
+        - create GCE persistent disk.
         
 Shortcut
     * edit ~/.bashrc
@@ -46,6 +50,10 @@ Shortcut
     replicationcontroller=rc
     replicaset=rs
     namespace=ns
+    ingress=ing
+    persistentvolume=pv
+    persistentvolumeclaim=pvc
+    storageclass=sc
 
 Kubes
     kubectl config set-context $(kubectl config current-context) --namespace [ns]
