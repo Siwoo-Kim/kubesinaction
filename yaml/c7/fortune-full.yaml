@@ -1,0 +1,81 @@
+apiVersion: apps/v1
+kind: ReplicaSet
+metadata:
+  namespace: dev
+  name: fortune-full
+  labels:
+    app: fortune
+spec:
+  replicas: 3
+  selector:
+    matchExpressions:
+      - key: app
+        operator: In
+        values:
+          - fortune
+  template:
+    metadata:
+      name: fortune-full
+      labels:
+        app: fortune
+    spec:
+      containers:
+        - name: web-server
+          image: nginx:alpine
+          volumeMounts:
+            - mountPath: /usr/share/nginx/html
+              name: html
+              readOnly: true
+            - mountPath: /etc/nginx/conf.d
+              readOnly: true
+              name: config
+          ports:
+            - containerPort: 80
+              protocol: TCP
+        - name: fortune
+          image: sm123tt/fortune:env
+          envFrom:
+            - configMapRef:
+                name: kubia-config
+          volumeMounts:
+            - mountPath: /var/htdocs 
+              name: html
+      volumes:
+        - name: html
+          emptyDir:
+            medium: Memory
+        - name: config
+          configMap:
+            name: kubia-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: dev
+  name: fortune
+  labels:
+    app: fortune
+spec:
+  type: NodePort
+  selector:
+    app: fortune
+  ports:
+    - port: 80
+      targetPort: 80
+      nodePort: 30123
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  namespace: dev
+  name: fortune
+  labels:
+    app: fortune
+spec:
+  rules:
+    - host: www.kubia-example.com
+      http:
+        paths:
+          - backend:
+              serviceName: fortune
+              servicePort: 80

@@ -499,3 +499,96 @@ spec:
   accessModes:
     - [accessMode]
   storageClassName: [stcName]
+  
+Configuration Resource
+- through command-line arguments
+- through env variables.
+- through mounting volumes (configmap, secret). This is preferred way. (decoupling configs from pod descriptor)
+
+Passing command-line arguments to containers.
+- Docker ENTRYPOINT: defines the executable invoked when the container is started.
+- Docker CMD: specifies the args that passed to the ENTRYPOINT
+- Kube command: override Docker ENTRYPOINT
+- Kube args: override Docker CMD
+- can refer env by $(ENV_NAME)
+
+template:
+metadata:
+  labels:
+    app: ...
+spec:
+  containers:
+    - name: ...
+      image: ...
+      command:
+        - [exec form]
+      args:
+        - [arg1]    // must enclose numbers
+        - [arg2]
+        ...
+      volumeMounts:
+        ...
+
+Setting env variable for a container.
+- kube allow you to specify env variables for each container.
+- env variables cannot be updated after the pod is created.
+- set the env variable "at the container level"
+- can refer other env by $(ENV_NAME)
+
+template:
+    metadata:
+      labels:
+        ...: ...
+      name: ...
+    spec:
+      containers:
+        - name: ...
+          image: ...
+          env:
+            - name: [name]
+              value: [value]
+            - name: [name1]
+              value: [value]
+            - name: [name2]
+              value: $(name1)   //refer to other env
+          volumeMounts:
+            ...
+      volumes:
+        ...
+        
+ConfigMaps
+- key/value pairs with the values ranging from literals to full config files.
+- allows to keep same pod manifest manifests for different envs.
+- only container refer the non-existing cm will fail to start, but other container in the same pod will start.
+- can use kubectl create cm [cmName] --from-file=[file|directory] --from-literal=[key]=[value]
+- you can mount the configmap as volume.
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  labels:
+    ...
+  name: [cmName]
+data:
+  [key]: [value]
+  
+  
+template:
+    metadata:
+        ...
+    spec:
+      containers:
+        ...
+            env:
+            - name: [envName]
+              valueFrom:
+                configMapKeyRef:
+                  name: [cmName]
+                  key: [keyName]
+            - name: [envName]
+              valueFrom:
+                configMapKeyRef:
+                  name: [cmName]
+                  key: keyName
+          volumeMounts:
+            ...

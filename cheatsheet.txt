@@ -2,7 +2,7 @@ https://kubernetes.io/docs/reference/kubectl/cheatsheet/
 https://kubernetes.io/docs/reference/kubectl/docker-cli-to-kubectl/
 
 Docker
-    docker run --name [containerName] [command] -p [hostPort]:[containerPort] [-d] [image:tag]
+    docker run --name [containerName] [command] -p [hostPort]:[containerPort] [-d] [image:tag] [arguments]
         - run the image 
     docker build -t [image:tag] .
         - build the docker image using Dockerfile 
@@ -17,6 +17,9 @@ Docker
     docker tag [imgName] [newImgName]
         - tagging with new name
 
+    * ENTRYPOINT [exec form] - exec form invoked when the container starts.
+    * CMD [args]  - default argument for the executable
+    
 GCLOUD
     export CLOUDSDK_PYTHON=/usr/bin/python
     
@@ -54,7 +57,8 @@ Shortcut
     persistentvolume=pv
     persistentvolumeclaim=pvc
     storageclass=sc
-
+    configmap=cm
+    
 Kubes
     kubectl config set-context $(kubectl config current-context) --namespace [ns]
         - change the current namespace.
@@ -103,3 +107,5 @@ Kubes
         - add or changing a label.
     kube delete [resourceType] -l [label] [--all]
         - delete the running pod.
+    kubectl create cm [cmName] --from-file=[file|directory] --from-literal=[key]=[value]
+        - create cm from cmd

@@ -1,0 +1,150 @@
+apiVersion: apps/v1
+kind: ReplicaSet
+metadata:
+  namespace: dev
+  name: fortune-cmd
+  labels:
+    app: fortune
+spec:
+  replicas: 1
+  selector:
+    matchExpressions:
+      - key: app
+        operator: In
+        values:
+          - fortune
+  template:
+    metadata:
+      labels:
+        app: fortune
+      name: fortune-cmd
+    spec:
+      containers:
+        - name: fortune
+          image: sm123tt/fortune:cmd
+          command:
+            - /bin/fortuneloop.sh
+          args:
+            - "5"
+          volumeMounts:
+            - mountPath: /var/htdocs
+              name: html
+      volumes:
+        - name: html
+          emptyDir:
+            medium: Memory
+---
+apiVersion: apps/v1
+kind: ReplicaSet
+metadata:
+  namespace: dev
+  name: fortune-env
+  labels:
+    app: fortune
+spec:
+  selector:
+    matchExpressions:
+      - key: app
+        operator: In
+        values:
+          - fortune
+  template:
+    metadata:
+      labels:
+        app: fortune
+      name: fortune-env
+    spec:
+      containers:
+        - name: fortune
+          image: sm123tt/fortune:env
+          env:
+            - name: INTERVAL
+              value: "5"
+            - name: FIRST_VAR
+              value: "foo"
+            - name: SECOND_VAR
+              value: "$(FIRST_VAR)bar"
+          volumeMounts:
+            - mountPath: /var/htdocs
+              name: html
+      volumes:
+        - name: html
+          emptyDir:
+            medium: Memory
+---
+apiVersion: apps/v1
+kind: ReplicaSet
+metadata:
+  namespace: dev
+  labels:
+    app: fortune
+  name: fortune-cm
+spec:
+  selector:
+    matchExpressions:
+      - key: app
+        operator: In
+        values:
+          - fortune
+  template:
+    metadata:
+      labels:
+        app: fortune
+      name: fortune-cm
+    spec:
+      containers:
+        - name: fortune
+          image: sm123tt/fortune:env
+          env:
+            - name: INTERVAL
+              valueFrom:
+                configMapKeyRef:
+                  name: fortune-config
+                  key: INTERVAL
+            - name: FIRST_VAR
+              valueFrom:
+                configMapKeyRef:
+                  name: fortune-config
+                  key: FIRST_VAR
+          volumeMounts:
+            - mountPath: /var/htdocs
+              name: html
+      volumes:
+        - name: html
+          emptyDir:
+            medium: Memory
+---
+apiVersion: apps/v1
+kind: ReplicaSet
+metadata:
+  namespace: dev
+  labels:
+    app: fortune
+  name: fortune-cm2
+spec:
+  selector:
+    matchExpressions:
+      - key: app
+        operator: In
+        values:
+          - fortune
+  template:
+    metadata:
+      labels:
+        app: fortune
+      name: fortune-cm2
+    spec:
+      containers:
+        - name: fortune
+          image: sm123tt/fortune:cmd
+          envFrom:
+            - configMapRef:
+                name: fortune-config
+          args: ["$(INTERVAL)"]
+          volumeMounts:
+            - mountPath: /var/htdocs
+              name: html
+      volumes:
+        - name: html
+          emptyDir:
+            medium: Memory

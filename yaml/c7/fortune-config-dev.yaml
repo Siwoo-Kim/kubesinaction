@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  namespace: dev
+  labels:
+    app: fortune
+  name: fortune-config
+data:
+  INTERVAL: "25"
+  FIRST_VAR: "test"
