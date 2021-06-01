@@ -37,8 +37,12 @@ GCLOUD
         - open firewall on the node
     gcloud compute disks create --size=10GiB --zone=us-central1-c mongodb
         - create GCE persistent disk.
-        
+
+SSL
+    openssl genrsa -out https.key 2048
+    openssl req -new -x509 -key https.key -out https.cert -days 3650 -subj /CN=www.kubia-example.com
 Shortcut
+
     * edit ~/.bashrc
         => alias k=kubectl
     

@@ -29,6 +29,9 @@ spec:
             - mountPath: /etc/nginx/conf.d
               readOnly: true
               name: config
+            - name: certs
+              mountPath: /etc/nginx/certs/
+              readOnly: true
           ports:
             - containerPort: 80
               protocol: TCP
@@ -47,6 +50,9 @@ spec:
         - name: config
           configMap:
             name: kubia-config
+        - name: certs
+          secret:
+            secretName: fortune-https
 ---
 apiVersion: v1
 kind: Service

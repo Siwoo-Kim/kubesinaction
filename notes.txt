@@ -592,3 +592,36 @@ template:
                   key: keyName
           volumeMounts:
             ...
+
+Secrets
+- hold key-value pairs that holds sensitive dta.
+- pass secret entries to the container's env variables.
+- expose secret entries as files in a volume.
+- default-token attached to container automatically and that is used to talk with KUBE API server securely.
+- default-token is in /var/run/secrets/kubernetes.io/serviceaccount
+- secret can used for non-sensitive binary data. (1MB limit)
+
+kube create secret generic fortune-http --from-file=[files]
+
+  template:
+    ...
+    spec:
+      containers:
+        ...
+          volumeMounts:
+            ...
+            - name: certs
+              mountPath: [mntPath]
+              readOnly: true
+          ports:
+            ...
+      volumes:
+        ...
+        - name: certs
+          secret:
+            secretName: [secretName]
+            
+docker-registry Secret (Docker secrets)
+- credentials for Docker registry.
+
+kube create secret docker-registry [secretName] --docker-username=[userName] --docker-password=[pwd] --docker-email=[email]
