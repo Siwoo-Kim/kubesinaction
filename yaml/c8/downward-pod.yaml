@@ -1,0 +1,89 @@
+apiVersion: apps/v1
+kind: ReplicaSet
+metadata:
+  namespace: dev
+  name: downward
+  labels:
+    app: downward
+spec:
+  replicas: 1
+  selector:
+    matchExpressions:
+      - key: app
+        operator: In
+        values:
+          - downward
+  template:
+    metadata:
+      labels:
+        app: downward
+      name: downward-pod
+      annotations:
+        foo: bar
+        key: multi|
+             line
+    spec:
+      containers:
+        - name: main-env
+          image: busybox
+          command: ["sleep"]
+          args:
+            - "9999999"
+          resources:
+            requests:
+              cpu: 15m
+              memory: 100Ki
+            limits:
+              cpu: 100m
+              memory: 4Mi
+          env:
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+            - name: NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+        - name: main-vol
+          image: busybox
+          command: ["sleep", "9999999"]
+          resources:
+            requests:
+              cpu: 15m
+              memory: 100Ki
+            limits:
+              cpu: 100m
+              memory: 4Mi
+          volumeMounts:
+            - mountPath: /etc/downward
+              name: downward-vol
+      volumes:
+        - name: downward-vol
+          downwardAPI:
+            items:
+              - path: "name"
+                fieldRef:
+                  fieldPath: metadata.name
+              - path: "namespace"
+                fieldRef:
+                  fieldPath: metadata.namespace
+              - path: "labels"
+                fieldRef:
+                  fieldPath: metadata.labels
+              - path: "annotations"
+                fieldRef:
+                  fieldPath: metadata.annotations
+              - path: "req_cpu"
+                resourceFieldRef:
+                  containerName: main-vol
+                  resource: requests.cpu
+                  divisor: 1m

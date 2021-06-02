@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  namespace: dev
+  name: kubia
+  labels:
+    app: kubia
+spec:
+  containers:
+    - name: main
+      image: sm123tt/kubia
+      env:
+        - name: NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace

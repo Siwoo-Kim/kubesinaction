@@ -93,7 +93,7 @@ Kubes
         - get resource's detail
     kube run [name] [--image=[imgName]] --port=[portNum] --generator=[apiVerison]
         - deploy rs with cmd
-    * kube exec -it [containerName] [bash|sh]
+    * kube exec -it [podName] [bash|sh]
         - run shell on running container
     kube expose [resourceType] [resourceName] --type=LoadBalancer --name [serviceName]
         - deploy LoadBalancer Service for given pod
@@ -111,5 +111,10 @@ Kubes
         - add or changing a label.
     kube delete [resourceType] -l [label] [--all]
         - delete the running pod.
-    kubectl create cm [cmName] --from-file=[file|directory] --from-literal=[key]=[value]
+    kube create cm [cmName] --from-file=[file|directory] --from-literal=[key]=[value]
         - create cm from cmd
+    kube create secret docker-registry [secretName] --docker-username=[userName] --docker-password=[pwd] --docker-email=[email]
+        - create a credential for docker-registry
+    kube proxy
+        - run a proxy server on local machine (TLS) and proxies them to the API server.
+        

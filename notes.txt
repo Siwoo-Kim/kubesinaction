@@ -625,3 +625,88 @@ docker-registry Secret (Docker secrets)
 - credentials for Docker registry.
 
 kube create secret docker-registry [secretName] --docker-username=[userName] --docker-password=[pwd] --docker-email=[email]
+
+Passing metadata through env or manifest. (Kube Downward API)
+- The Downward API exposes pod metadata through env variables or files.
+- must use downwardAPI volume for exposing the pod's labels or annotations.
+- the metadata through downwardAPI volume is up-to-dated.
+
+    Metadata from Downward API
+    - pod's name
+    - pod's ip
+    - pod's namespace
+    - node the pod is running
+    - service account the pod is running
+    - cpu and memory req & limit
+    - pod's label & annotations
+    
+    Service account
+    - the account that the pod authenticates when talking to the API server
+
+template:
+...
+spec:
+  containers:
+      ...
+      resources:
+        requests:
+          cpu: 15m
+          memory: 100Ki
+        limits:
+          cpu: 100m
+          memory: 4Mi
+      env:
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: POD_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: POD_IP
+          valueFrom:
+            fieldRef:
+              fieldPath: status.podIP
+        - name: NODE_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: spec.nodeName
+       - name: main-vol
+                ...
+            resources:
+              requests:
+                ...
+            volumeMounts:
+              - mountPath: /etc/downward
+                name: downward-vol
+    volumes:
+      - name: downward-vol
+        downwardAPI:
+          items:
+            - path: "name"
+              fieldRef:
+                fieldPath: metadata.name
+                ...
+            - path: "req_cpu"
+              resourceFieldRef:
+                containerName: main-vol
+                resource: requests.cpu
+                divisor: 1m
+    
+Kube API Server
+- when need to know more about other pods' metadata, should talk with Kube API Server 
+- Kube holds up-to-date information about other resources.
+- "kube proxy" will run proxy server on local and allow to talk with "Kube API Server" (get its URL, by running kube cluster-info)
+- from "Kube API Server" endpoints, can get the definition of any resources.
+- in pod, ca.cert is in "/var/run/secrets/kubernetes.io/serviceaccount/" dir and can talk with "https://kubernetes"
+- "Kube API Server"'s endpoint describe the REST resource exposed.
+- https://10.8.0.1/api/v1/namespaces/[nsName]/[resourceType]/[resourceName]
+
+Kube API Server Authentication.
+- register ca.cert (/var/run/secrets/kubernetes.io/serviceaccount/ca.cert)
+- -H "Authorization: Bearer: $TOKEN" (/var/run/secrets/kubernetes.io/serviceaccount/token)
+
+Kube API Server Client Libraries to talk to the API server.
+- fabric8io/kubernetes-client
+- the library support https and take care of authentication.
