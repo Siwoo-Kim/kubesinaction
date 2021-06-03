@@ -1,13 +1,10 @@
 package com.siwoo.kubes.simpleserver;
 
 import com.google.common.collect.ImmutableMap;
-import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.PodList;
 import io.fabric8.kubernetes.client.DefaultKubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import lombok.extern.slf4j.Slf4j;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
@@ -35,6 +32,22 @@ public class SimpleServerApplication {
 		return new DefaultKubernetesClient();
 	}
 	
+	@Bean
+	public Version version() {
+		return new Version();
+	}
+	
+	public static class Version {
+		private final String v = "v2";
+
+		@Override
+		public String toString() {
+			return "Version{" +
+					"v='" + v + '\'' +
+					'}';
+		}
+	}
+	
 	@Slf4j
 	@RestController
 	private static class OpenController {
@@ -42,6 +55,8 @@ public class SimpleServerApplication {
 		private String TOKEN_PATH;
 		@Autowired
 		private KubernetesClient kubeClient;
+		@Autowired
+		private Version version;
 		
 		@GetMapping("/")
 		public ResponseEntity<?> index(HttpServletRequest req) {
@@ -67,6 +82,11 @@ public class SimpleServerApplication {
 					.map(s -> s.getMetadata().getName())
 					.collect(Collectors.joining(","));
 			return ResponseEntity.ok(names);
+		}
+		
+		@GetMapping("/version")
+		public ResponseEntity<?> getVersion() {
+			return ResponseEntity.ok(version.toString());
 		}
 	}
 }
