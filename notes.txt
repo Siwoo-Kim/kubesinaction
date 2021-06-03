@@ -119,7 +119,8 @@ Pods
     - check container's health through liveness probes.
     - specify "liveness probe" in the "pod's specification".
     - Kube will periodically execute and if a "probe fail", it will "restart" the container.
-        
+    - Liveness probes 은 헬스체킹한 후 문제가 있다면 팟을 재시작, Readness probes 은 헬스체킹 한 후 트래픽을 받지 않도록 설정.
+    
         Components:
         HTTP GET probe
         - performs an HTTP GET request on the container's IP address, a port and path you specify.
@@ -710,3 +711,41 @@ Kube API Server Authentication.
 Kube API Server Client Libraries to talk to the API server.
 - fabric8io/kubernetes-client
 - the library support https and take care of authentication.
+
+Updating apps running in pods. (Deployment)
+    Two ways of updating all the pods.
+    - delete all existing pods first and then start the new ones. (=availability issue)
+    - start new ones and, once they're up, delete the old ones. (replacing all or gradually) (=version conflict)
+        = 모든 새로운 pod 을 생성후 교체하거나 하나의 팟 없애고 생성하는 식으로 점층적으로 교체.  
+    Blue-Green Deployment
+    - once all the new pods are up, change the Service's label selector and have the service switch over to the new pods.
+    
+Deployment
+- higher-level resource for deploying application and updating them "declaratively", instead of rc and rs.
+- A Deployment is backed by a replicaset internally.
+- species a deployment strategy on the yaml.
+- when create a deploy use [--record] option for revision history
+- modifying pod template defined in deploy manifest will update the existing pods.
+- roll out <> roll back
+- must define readiness probe (don't send traffic to the removed pod.)
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+    ...
+spec:
+  replicas: [numReplicas]
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%       // determine how man pod you allow to exist when update app.
+      maxUnavailable: 25% // how many pod can be unavailable
+    type: RollingUpdate
+  selector:
+    ...
+  template:
+    ...
+    
+    Deployment strategies.
+    - RollingUpdate (default) - removes old pods ony by one, while adding new ones. (multi versions)
+    - Recreate - delete all the old pods at once and then creates new ones. (short downtime)
+    

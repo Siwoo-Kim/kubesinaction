@@ -62,6 +62,7 @@ Shortcut
     persistentvolumeclaim=pvc
     storageclass=sc
     configmap=cm
+    deployment=deploy
     
 Kubes
     kubectl config set-context $(kubectl config current-context) --namespace [ns]
@@ -99,12 +100,12 @@ Kubes
         - deploy LoadBalancer Service for given pod
     kube scale rc [containerName] --replicas=[replicas]
         - horizontally scaling rc
-    kube create -f [yamlFile]
+    kube create -f [yamlFile] [--record]
         - creating resource from a YAML file.
     kube logs [podName] -c [ctName] [--previous]
         - show last rotation logs
     kube port-forward [podName] [localPort]:[podPort]
-        - forwarding local p
+        - forwarding local port.
     kube edit [resourceType] [resourceName]
         - open the resource's yaml in the text editor to edit the definition.
     kube label [resourceType] [resourceName] [key=value] [--overwrite]
@@ -112,9 +113,17 @@ Kubes
     kube delete [resourceType] -l [label] [--all]
         - delete the running pod.
     kube create cm [cmName] --from-file=[file|directory] --from-literal=[key]=[value]
-        - create cm from cmd
+        - create cm from cmd.
     kube create secret docker-registry [secretName] --docker-username=[userName] --docker-password=[pwd] --docker-email=[email]
-        - create a credential for docker-registry
+        - create a credential for docker-registry.
     kube proxy
         - run a proxy server on local machine (TLS) and proxies them to the API server.
-        
+    - kube rolling-update [rsName] [newRsName] --image=[imgName:tag]
+    kube rollout status deploy [deployName]
+    - checking deployment's status.
+    kube set image deploy [deployName] [dockerImg]
+    - change the dockerImage for running the deployment .
+    kube rollout undo deploy [deployName] -n dev --to-revision=[revisionVersion]
+    - roll back to previous deploy
+    kube rollout history deployment [deployName]
+    - check the history revision of each deploy
