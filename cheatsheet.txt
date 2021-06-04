@@ -71,7 +71,9 @@ Kubes
     kube get nodes -o jsonpath='{.items[*].status.addresses[?(@.type=="ExternalIP")].address}'
         - get the node's external ip
     kube get po --all-namespaces
-        - get all pods in all na
+        - get all pods in all namespace
+    kube get po --watch
+        - register as watcher (be notified of each creation, modification, or deletion of a pod)
     kube config
         - change the context
     kube cluster-info
@@ -127,3 +129,5 @@ Kubes
     - roll back to previous deploy
     kube rollout history deployment [deployName]
     - check the history revision of each deploy
+    kube get events.
+    - retrieve events about resources updated.

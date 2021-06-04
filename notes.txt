@@ -1,3 +1,61 @@
+Kube Architecture
+- Kube Control Plane
+- Nodes
+
+Kube Control Plane
+- Kube Control Plane controls and makes the whole cluster function.
+
+Kube Control Plane Components
+- etcd (distributed persistent storage)
+- Kube API Server.
+- Scheduler
+- Controller Manager.
+- Kube DNS
+
+Node Components.
+- kubelet
+- kube-proxy
+- container runtime. (Docker)
+
+Kube API server.
+- all system components communicate through API server.
+- provides a CRUD interface for querying and modifying the cluster state over a RESTful API
+- send updated object to all interested watchers. (kube get pods --watch)
+
+Controller Manager
+- make sure the actual state of the system converges (수렴) toward the desired state.
+- controllers run a loop, which reconciles the actual state with the desired state. 
+    eg) Deployment controller keep the actual state of a deployment in sync with the desired state specified in object manifest. 
+    eg) Persistent controller find an appropriate PV for PVC and bind it to the PVC.
+Scheduler
+- instructs which cluster node a pod should run on.
+- as soon as the kubelet on the target node sees the pod has been scheduled to its node, it creates and runs the pod's containers.
+- default scheduling algorithm - filtering all nodes and use RR (round-robin) to ensure pods are deployed across the nodes evenly.
+
+etcd
+- distributed key-value store to save object's manifest
+- only Kube API server talks to etcd directly.
+
+Kubelet
+- Kubelet is the component responsible for everything running on a worker node.
+- monitor the Kube API server for pods that have been scheduled to the node, and start the pod's container.
+- telling Docker (container runtime) to run a container from a specific image.
+- reports pod's status, events and resource consumption to the API server.
+- runs liveness probes, restarting container when the probes fail.
+
+Kube-proxy
+- every node runs the kube-proxy
+- make sure clients can connect to the services defined through "Kube API".
+- When a service is baked by more than one pod (or endpoints), the proxy performs load balancing across the pods.
+- userspace proxy mode & iptable proxy mode.
+
+Kube DNS server.
+- All the pods use the cluster's internal DNS server to look up services by name (Service discovery)
+- The DNS service's IP is specified as the nameserver in the /etc/resolv.conf inside every container.
+
+Ingress Controllers.
+- runs al reverse proxy server and forward traffic to the service's pod directly.
+
 Container
 - Kubernetes requires app to be packaged into container image.
 - Docker supports having multiple versions under same image.
