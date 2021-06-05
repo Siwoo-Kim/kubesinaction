@@ -27,6 +27,7 @@ Controller Manager
 - controllers run a loop, which reconciles the actual state with the desired state. 
     eg) Deployment controller keep the actual state of a deployment in sync with the desired state specified in object manifest. 
     eg) Persistent controller find an appropriate PV for PVC and bind it to the PVC.
+    
 Scheduler
 - instructs which cluster node a pod should run on.
 - as soon as the kubelet on the target node sees the pod has been scheduled to its node, it creates and runs the pod's containers.
@@ -54,7 +55,11 @@ Kube DNS server.
 - The DNS service's IP is specified as the nameserver in the /etc/resolv.conf inside every container.
 
 Ingress Controllers.
-- runs al reverse proxy server and forward traffic to the service's pod directly.
+- runs a reverse proxy server and forward traffic to the service's pod directly.
+
+Inter-pod networking
+- NAT-less network. the packet sent by pod A must reach pod B with both the source & destination IP unchanged.
+- Pod's network interface, a veth pair, Node's bridge.
 
 Container
 - Kubernetes requires app to be packaged into container image.
@@ -807,3 +812,115 @@ spec:
     - RollingUpdate (default) - removes old pods ony by one, while adding new ones. (multi versions)
     - Recreate - delete all the old pods at once and then creates new ones. (short downtime)
     
+Authentication
+- client certificate.
+- token in an HTTP header.
+- basic HTTP authentication.
+
+Users.
+- two kinds of client: actual humans, pods (ServiceAccount).
+
+Groups.
+- human users and ServiceAccounts can belong to one or more groups.
+- groups are used to grant permissions to several users at once.
+
+    Built in groups.
+    - system:unauthenticated
+    - system:authenticated
+    - system:serviceaccounts
+    - system:serviceaccounts:<namespace>
+    
+ServiceAccount
+- represents the identity of the app running in the pod.
+- a way for an app in the pod to authenticate itself with the "Kube API server"
+- "/var/run/secrets/kubernetes.io/serviceaccount/token" holds ServiceAccount's authentication token.
+- usernames are formatted like: "system:serviceaccount:<namespace><service account name>"
+- ServiceAccount is automatically created for each namespace.
+- a pod can only use "a single ServiceAccount" "from the pod's namespace."
+- specifying the account's name in the pod manifest and by doing this, you can control which resources each pod has access to (RBAC).
+- When sa is created, associated ca.crt and token are automatically created. (only the pod has the serviceaccount can "mount" the token)
+- ServiceAccount also contain a list of image pull Secrets.
+- ServiceAccounts can assign by setting the name in the spec.serviceAccountName
+
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+    ...
+imagePullSecrets:
+  - name: ...
+---
+apiVersion: v1
+kind: Pod
+metadata:
+    ...
+spec:
+  serviceAccountName: foo
+      containers:
+        ...
+      
+RBAC (role-based access control)
+- to check whether an action is allowed to be performed by the user.
+- RBAC rule applying to whole resource types and specific instances of a resource.
+- a user can have multiple RBAC rules.
+- RBAC rules are configured through Roles - ClusterRoles or RoleBinding - ClusterRoleBinding.
+- "A Role" only allow access to resources in the "same namespace".
+- "A Cluster Role" allow access to resources across different namespaces.
+
+    Actions
+    - get pods (HTTP GET)
+    - create services (HTTP POST)
+    - update secrets (HTTP PUT)
+    ..
+
+    Verbs.
+    HTTP method     verb for resource
+    GET, HEAD       get (single), list(collection)
+    POST            create
+    PUT             update
+    PATCH           patch
+    DELETE          delete(single), deletecollection(collection)
+    
+    Roles (namespaced resources) & ClusterRoles (cluster-level resources)
+    - specify which verbs can be performed on which resources.
+    - define what can be done
+    RoleBindings (namespaced resources) & ClusterRoleBindings (cluster-level resources)
+    - bind the above roles to specific users, groups or ServiceAccount.
+        binding "Subjects" with the "Role"
+    - define who can do it.
+    
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  namespace: [ns]
+  name: [roleName]
+rules:
+  - apiGroups: [apiGroups]
+    verbs: [verbs for actions]
+    resources: [resourceTypes - plural]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  namespace: [ns]
+  name: [rolebindingName]
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: [roleName]
+subjects:
+  - kind: [User|Group|ServiceAccount]
+    name: [subjectName]
+    namespace: [nsName]
+    
+Default Cluster Role
+- view, edit, admin and cluster-admin
+
+    "view" ClusterRole.
+    - reading most resources in a namespace.
+    "edit" ClusterRole.
+    - allow to modify resources in a namespace.
+    "admin" ClusterRole
+    - grant full control.
+    "cluster-admin"
+    - grant full control & ResourceQuota objects

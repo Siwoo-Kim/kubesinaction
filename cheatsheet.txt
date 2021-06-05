@@ -131,3 +131,4 @@ Kubes
     - check the history revision of each deploy
     kube get events.
     - retrieve events about resources updated.
+    kube create sa foo
